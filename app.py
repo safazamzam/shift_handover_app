@@ -54,6 +54,10 @@ app.register_blueprint(user_mgmt_bp)
 from routes.keypoints import keypoints_bp
 app.register_blueprint(keypoints_bp)
 
+# Register misc blueprint for 'coming soon' tabs
+from routes.misc import misc_bp
+app.register_blueprint(misc_bp)
+
 @login_manager.user_loader
 def load_user(user_id):
     from models.models import User
