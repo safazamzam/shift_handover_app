@@ -51,6 +51,24 @@
                 </div>
             </div>
         </form>
+            <!-- Export Controls -->
+            <form method="get" action="{{ url_for('reports.export_handover_bulk') }}" class="mb-4">
+                <input type="hidden" name="account_id" value="{{ selected_account_id }}">
+                <input type="hidden" name="team_id" value="{{ selected_team_id }}">
+                <input type="hidden" name="date" value="{{ date_filter }}">
+                <input type="hidden" name="shift_type" value="{{ shift_type_filter }}">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-2">
+                        <select name="format" class="form-select">
+                            <option value="csv">Export as Excel/CSV</option>
+                            <option value="pdf">Export as PDF</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-success">Download</button>
+                    </div>
+                </div>
+            </form>
         <script>
         function updateTeamsDropdown(accountId) {
             fetch('/get_teams?account_id=' + accountId)
@@ -105,11 +123,11 @@
                             </ul>
                         </td>
                         <td>
-                            {% if entry.shift.status == 'draft' %}
-                            <a href="{{ url_for('handover.edit_handover', shift_id=entry.shift.id) }}" class="btn btn-primary btn-sm">Edit</a>
-                            {% else %}
-                            <span class="text-muted">Final</span>
-                            {% endif %}
+                                {% if entry.shift.status == 'draft' %}
+                                <a href="{{ url_for('handover.edit_handover', shift_id=entry.shift.id) }}" class="btn btn-primary btn-sm">Edit</a>
+                                {% else %}
+                                <span class="text-muted">Final</span>
+                                {% endif %}
                         </td>
                     </tr>
                 {% endfor %}
@@ -119,4 +137,3 @@
     </div>
 </div>
 {% endblock %}
-
