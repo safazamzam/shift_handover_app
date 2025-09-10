@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Drafted Shift Handovers</h2>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Current Shift</th>
+            <th>Next Shift</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for draft in drafts %}
+        <tr>
+            <td>{{ draft.date }}</td>
+            <td>{{ draft.current_shift_type }}</td>
+            <td>{{ draft.next_shift_type }}</td>
+            <td>
+                <a href="{{ url_for('handover.edit_handover', shift_id=draft.id) }}" class="btn btn-primary btn-sm">Edit</a>
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4">No drafts found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+<a href="{{ url_for('handover.handover') }}" class="btn btn-success">New Handover</a>
+{% endblock %}

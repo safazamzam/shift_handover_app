@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shift Handover App</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/roster_custom.css">
+    <link rel="stylesheet" href="/static/roster_heatmap.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+        }
+        .sidebar .nav-link {
+            color: #333;
+        }
+</style>
+    </head>
+    <body>
+    {% set show_sidebar = not (request.endpoint == 'auth.login' or request.endpoint == 'login') %}
+    {% if show_sidebar %}
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-2 d-none d-md-block sidebar p-0">
+                <div class="position-sticky">
+                    <ul class="nav flex-column py-3">
+                        <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/handover">Handover Form</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/roster">Shift Roster</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/roster-upload">Shift Roster Upload</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/team">Team Details</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/handover-reports">Shift Handover Reports</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/escalation-matrix">Escalation Matrix</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/keypoints">Key Points Updates</a></li>
+                        {% if current_user.is_authenticated and current_user.role in ['super_admin', 'account_admin', 'team_admin'] %}
+                        <li class="nav-item"><a class="nav-link" href="/user-management">User Management</a></li>
+                        {% endif %}
+                    </ul>
+                    {% if current_user.is_authenticated %}
+                    <div class="px-3 pb-3">
+                        <div class="card mb-2">
+                            <div class="card-body p-2 d-flex align-items-center justify-content-between">
+                                <div class="dropdown w-100">
+                                    <a class="d-flex align-items-center text-decoration-none dropdown-toggle w-100" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="background: none; border: none;">
+                                        <img src="https://ui-avatars.com/api/?name={{ current_user.username|urlencode }}&background=0D8ABC&color=fff&size=40" alt="User Logo" class="rounded-circle me-2" width="40" height="40">
+                                        <div class="flex-grow-1 text-start">
+                                            <span class="fw-bold">{{ current_user.username }}</span><br>
+                                            <span class="text-muted" style="font-size: 0.9em;">{{ current_user.role|capitalize }}</span>
+                                        </div>
+                                    </a>
+                                    <ul class="dropdown-menu w-100" aria-labelledby="userDropdown">
+                                        <li><a class="dropdown-item" href="#" onclick="alert('Profile feature coming soon.');">Profile</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="alert('Settings coming soon.');">Settings</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">Logout</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Removed global account/team filter for super_admin/account_admin -->
+                    </div>
+                    {% endif %}
+                </div>
+            </nav>
+            <main class="col-md-10 ms-sm-auto px-4">
+                <div class="pt-4">
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            <div class="container mb-3">
+                                {% for message in messages %}
+                                    <div class="alert alert-info alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                    {% block content %}{% endblock %}
+                </div>
+            </main>
+        </div>
+    </div>
+    {% else %}
+    <div class="d-flex align-items-center justify-content-center vh-100" style="background: linear-gradient(135deg, #e9ecef 0%, #f8f9fa 100%);">
+        <div class="card shadow-lg p-4" style="min-width: 350px; max-width: 400px; width: 100%; border-radius: 1rem;">
+            <div class="card-body">
+                {% if not show_sidebar %}
+                    {{ self.content() }}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    <!-- Profile Modal removed as requested -->
+    </body>
+</html>
+</body>
+</html>
+

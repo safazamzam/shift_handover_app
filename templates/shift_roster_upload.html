@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="dashboard-upload-card card shadow p-4 mb-4 bg-white rounded">
+    <h2 class="mb-3">Shift Roster Upload</h2>
+    <form method="POST" action="{{ url_for('roster_upload.roster_upload') }}" enctype="multipart/form-data" class="mb-4">
+        <div class="row g-3 align-items-center">
+            {% if current_user.role == 'super_admin' %}
+            <div class="col-md-3">
+                <label for="account_id" class="form-label">Account</label>
+                <select name="account_id" id="account_id" class="form-select" required onchange="updateTeamsDropdown(this.value)">
+                    <option value="">-- Select Account --</option>
+                    {% for account in accounts %}
+                    <option value="{{ account.id }}" {% if account.id|string == request.args.get('account_id') %}selected{% endif %}>{{ account.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="team_id" class="form-label">Team</label>
+                <select name="team_id" id="team_id" class="form-select" required>
+                    <option value="">-- Select Team --</option>
+                    {% for team in teams %}
+                    <option value="{{ team.id }}" {% if team.id|string == request.args.get('team_id') %}selected{% endif %}>{{ team.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <script>
+            function updateTeamsDropdown(accountId) {
+                fetch('/get_teams?account_id=' + accountId)
+                    .then(response => response.json())
+                    .then(data => {
+                        const teamSelect = document.getElementById('team_id');
+                        teamSelect.innerHTML = '<option value="">-- Select Team --</option>';
+                        data.teams.forEach(team => {
+                            teamSelect.innerHTML += `<option value="${team.id}">${team.name}</option>`;
+                        });
+                    });
+            }
+            </script>
+            {% elif current_user.role == 'account_admin' %}
+            <div class="col-md-3">
+                <label for="team_id" class="form-label">Team</label>
+                <select name="team_id" id="team_id" class="form-select" required>
+                    <option value="">-- Select Team --</option>
+                    {% for team in teams %}
+                    <option value="{{ team.id }}" {% if team.id|string == request.args.get('team_id') %}selected{% endif %}>{{ team.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            <div class="col-auto">
+                <label for="file" class="form-label">Upload Excel (.xlsx)</label>
+                <input type="file" name="file" id="file" accept=".xlsx" required class="form-control">
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-success">Upload Shift Roster</button>
+            </div>
+        </div>
+    </form>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="alert alert-info mt-2">
+          {% for message in messages %}
+            <div>{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% if table_data %}
+        <h4 class="mt-4">Uploaded Roster Preview</h4>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                    <tr>
+                        {% for col in columns %}<th>{{ col }}</th>{% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in table_data %}
+                    <tr>
+                        {% for col in columns %}<td>{{ row[col] }}</td>{% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+

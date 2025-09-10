@@ -1,0 +1,12 @@
+Flask
+Flask-SQLAlchemy
+Flask-Login
+Flask-Mail
+python-dotenv
+PyMySQL
+pandas
+plotly
+reportlab
+cryptography
+openpyxl
+Flask-Migrate

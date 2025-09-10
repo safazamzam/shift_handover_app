@@ -1,0 +1,36 @@
+/* Custom login page styles */
+.login-bg {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.login-card {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(44,62,80,0.08);
+    padding: 2.5rem 2.5rem 2rem 2.5rem;
+    max-width: 400px;
+    width: 100%;
+}
+.login-card h2 {
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+.login-card .form-label {
+    font-weight: 500;
+    color: #495057;
+}
+.login-card .btn-primary {
+    width: 100%;
+    border-radius: 20px;
+    font-weight: 600;
+    padding: 0.5rem 0;
+    margin-top: 0.5rem;
+}
+.login-card .alert {
+    margin-top: 1rem;
+}

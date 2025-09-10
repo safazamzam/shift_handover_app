@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>{{ action }} User</h2>
+<form method="post">
+    <div class="mb-3">
+        <label for="username" class="form-label">Username</label>
+        <input type="text" class="form-control" id="username" name="username" value="{{ user.username if user else '' }}" required>
+    </div>
+    <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" class="form-control" id="email" name="email" value="{{ user.email if user else '' }}" required>
+    </div>
+    <div class="mb-3">
+        <label for="password" class="form-label">Password</label>
+        <input type="password" class="form-control" id="password" name="password" {% if action == 'Add' %}required{% endif %}>
+        {% if action == 'Edit' %}<small class="form-text text-muted">Leave blank to keep current password.</small>{% endif %}
+    </div>
+    <div class="mb-3">
+        <label for="role" class="form-label">Role</label>
+        <select class="form-select" id="role" name="role" required>
+            {% for r in ['super_admin', 'account_admin', 'team_admin', 'user'] %}
+            <option value="{{ r }}" {% if user and user.role == r %}selected{% endif %}>{{ r.replace('_', ' ').title() }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+        <label for="account_id" class="form-label">Account</label>
+        <select class="form-select" id="account_id" name="account_id">
+            <option value="">None</option>
+            {% for account in accounts %}
+            <option value="{{ account.id }}" {% if user and user.account_id == account.id %}selected{% endif %}>{{ account.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+        <label for="team_id" class="form-label">Team</label>
+        <select class="form-select" id="team_id" name="team_id">
+            <option value="">None</option>
+            {% for team in teams %}
+            <option value="{{ team.id }}" {% if user and user.team_id == team.id %}selected{% endif %}>{{ team.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit" class="btn btn-success">{{ action }}</button>
+    <a href="{{ url_for('admin.users') }}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

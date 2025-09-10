@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="card shadow-sm p-4 mb-4">
+        <h2 class="mb-4">Shift Handover Reports</h2>
+        <form method="get" class="mb-4">
+            <div class="row g-2 align-items-end">
+                {% if current_user.role == 'super_admin' %}
+                <div class="col-md-3">
+                    <label for="account_id" class="form-label">Account</label>
+                    <select name="account_id" id="account_id" class="form-select" onchange="updateTeamsDropdown(this.value)">
+                        <option value="">-- Select Account --</option>
+                        {% for account in accounts %}
+                        <option value="{{ account.id }}" {% if selected_account_id == account.id %}selected{% endif %}>{{ account.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="team_id" class="form-label">Team</label>
+                    <select name="team_id" id="team_id" class="form-select">
+                        <option value="">-- Select Team --</option>
+                        {% for team in teams %}
+                        <option value="{{ team.id }}" {% if selected_team_id == team.id %}selected{% endif %}>{{ team.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% elif current_user.role == 'account_admin' %}
+                <div class="col-md-3">
+                    <label for="team_id" class="form-label">Team</label>
+                    <select name="team_id" id="team_id" class="form-select">
+                        <option value="">-- Select Team --</option>
+                        {% for team in teams %}
+                        <option value="{{ team.id }}" {% if selected_team_id == team.id %}selected{% endif %}>{{ team.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                <div class="col-md-3">
+                    <input type="date" name="date" class="form-control" value="{{ date_filter }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="shift_type" class="form-select">
+                        <option value="">All Shifts</option>
+                        <option value="Morning" {% if shift_type_filter=='Morning' %}selected{% endif %}>Morning</option>
+                        <option value="Evening" {% if shift_type_filter=='Evening' %}selected{% endif %}>Evening</option>
+                        <option value="Night" {% if shift_type_filter=='Night' %}selected{% endif %}>Night</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                </div>
+            </div>
+        </form>
+        <script>
+        function updateTeamsDropdown(accountId) {
+            fetch('/get_teams?account_id=' + accountId)
+                .then(response => response.json())
+                .then(data => {
+                    const teamSelect = document.getElementById('team_id');
+                    teamSelect.innerHTML = '<option value="">-- Select Team --</option>';
+                    data.teams.forEach(team => {
+                        teamSelect.innerHTML += `<option value="${team.id}">${team.name}</option>`;
+                    });
+                });
+        }
+        </script>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Current Shift</th>
+                        <th>Status</th>
+                        <th>Incidents</th>
+                        <th>Key Points</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for entry in shift_data %}
+                    <tr>
+                        <td>{{ entry.shift.date }}</td>
+                        <td>{{ entry.shift.current_shift_type }}</td>
+                        <td>
+                            {% if entry.shift.status == 'draft' %}
+                                <span class="badge bg-warning text-dark">Draft</span>
+                            {% else %}
+                                <span class="badge bg-success">Sent</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <ul class="list-group list-group-flush">
+                            {% for inc in entry.incidents %}
+                                <li class="list-group-item"><b>{{ inc.type }}</b>: {{ inc.title }}</li>
+                            {% endfor %}
+                            </ul>
+                        </td>
+                        <td>
+                            <ul class="list-group list-group-flush">
+                            {% for kp in entry.key_points %}
+                                <li class="list-group-item">{{ kp.description }} <span class="badge bg-secondary ms-2">{{ kp.status }}</span> <span class="text-muted small">Responsible: {{ kp.responsible }}</span></li>
+                            {% else %}
+                                <li class="list-group-item">No key points</li>
+                            {% endfor %}
+                            </ul>
+                        </td>
+                        <td>
+                            {% if entry.shift.status == 'draft' %}
+                            <a href="{{ url_for('handover.edit_handover', shift_id=entry.shift.id) }}" class="btn btn-primary btn-sm">Edit</a>
+                            {% else %}
+                            <span class="text-muted">Final</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

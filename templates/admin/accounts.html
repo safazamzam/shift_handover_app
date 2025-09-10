@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Accounts</h2>
+<a href="{{ url_for('admin.add_account') }}" class="btn btn-primary mb-2">Add Account</a>
+<table class="table table-bordered">
+    <thead><tr><th>ID</th><th>Name</th><th>Actions</th></tr></thead>
+    <tbody>
+    {% for account in accounts %}
+    <tr>
+        <td>{{ account.id }}</td>
+        <td>{{ account.name }}</td>
+        <td>
+            <a href="{{ url_for('admin.edit_account', account_id=account.id) }}" class="btn btn-sm btn-warning">Edit</a>
+            <form method="post" action="{{ url_for('admin.delete_account', account_id=account.id) }}" style="display:inline;">
+                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this account?')">Delete</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

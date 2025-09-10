@@ -1,0 +1,309 @@
+    {% extends 'base.html' %}
+    {% block content %}
+    <style>
+    /* Improve tab label visibility */
+    .nav-tabs .nav-link {
+        color: #212529 !important;
+        font-weight: 600;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-bottom: none;
+    }
+    .nav-tabs .nav-link.active {
+        color: #fff !important;
+        background: #0d6efd !important;
+        font-weight: 700;
+    }
+    </style>
+        <div class="container mt-4">
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <div class="alert alert-info" role="alert">
+                            <ul class="mb-0">
+                            {% for message in messages %}
+                                <li style="white-space: pre-wrap;">{{ message }}</li>
+                            {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <ul class="nav nav-tabs card-header-tabs" id="mgmtTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab" aria-controls="users" aria-selected="true">Users</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="teams-tab" data-bs-toggle="tab" data-bs-target="#teams" type="button" role="tab" aria-controls="teams" aria-selected="false">Teams</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="accounts-tab" data-bs-toggle="tab" data-bs-target="#accounts" type="button" role="tab" aria-controls="accounts" aria-selected="false">Accounts</button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body tab-content" id="mgmtTabsContent">
+                <!-- Users Tab -->
+                <div class="tab-pane fade show active" id="users" role="tabpanel" aria-labelledby="users-tab">
+                    <h5 class="mb-3">User Management</h5>
+                    <form method="post" action="/user-management" class="mb-4">
+                        <input type="hidden" name="action" value="add">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-2">
+                                <label>Username</label>
+                                <input type="text" name="username" class="form-control" required>
+                            </div>
+                            <div class="col-md-2">
+                                <label>Password</label>
+                                <input type="password" name="password" class="form-control" required>
+                            </div>
+                            <div class="col-md-2" id="role-group">
+                                <label>Role</label>
+                                <select name="role" class="form-select" required>
+                                    <option value="user">User</option>
+                                    <option value="team_admin">Team Admin</option>
+                                    <option value="account_admin">Account Admin</option>
+                                    <option value="super_admin">Super Admin</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2" id="account-group">
+                                <label>Account</label>
+                                <select name="account_id" class="form-select" id="account_id" required>
+                                    <option value="">Select Account</option>
+                                    {% for account in accounts %}
+                                        <option value="{{ account.id }}">{{ account.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2" id="team-group">
+                                <label>Team</label>
+                                <select name="team_id" class="form-select" id="team_id">
+                                    <option value="">(None)</option>
+                                    {% for team in teams %}
+                                        <option value="{{ team.id }}" data-account="{{ team.account_id }}">{{ team.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary">Add User</button>
+                            </div>
+                        </div>
+                        <script>
+                        // Filter teams by selected account
+                        document.addEventListener('DOMContentLoaded', function() {
+                            var accountSelect = document.getElementById('account_id');
+                            if (accountSelect) {
+                                accountSelect.addEventListener('change', function() {
+                                    var selectedAccount = this.value;
+                                    var teamSelect = document.getElementById('team_id');
+                                    var options = teamSelect.options;
+                                    for (var i = 0; i < options.length; i++) {
+                                        var opt = options[i];
+                                        if (!opt.value) { opt.style.display = ''; continue; }
+                                        if (opt.getAttribute('data-account') === selectedAccount) {
+                                            opt.style.display = '';
+                                        } else {
+                                            opt.style.display = 'none';
+                                        }
+                                    }
+                                    teamSelect.value = '';
+                                });
+                            }
+                            // Hide/show account/team fields based on role
+                            function updateRoleFields() {
+                                var roleSelect = document.querySelector('select[name="role"]');
+                                var role = roleSelect.value;
+                                var accountGroup = document.getElementById('account-group');
+                                var teamGroup = document.getElementById('team-group');
+                                if (role === 'super_admin') {
+                                    accountGroup.style.display = 'none';
+                                    teamGroup.style.display = 'none';
+                                } else if (role === 'account_admin') {
+                                    accountGroup.style.display = '';
+                                    teamGroup.style.display = 'none';
+                                } else {
+                                    accountGroup.style.display = '';
+                                    teamGroup.style.display = '';
+                                }
+                            }
+                            var roleSelect = document.querySelector('select[name="role"]');
+                            if (roleSelect) {
+                                roleSelect.addEventListener('change', updateRoleFields);
+                                updateRoleFields();
+                            }
+                        });
+                        </script>
+                    </form>
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Username</th>
+                                <th>Role</th>
+                                <th>Account</th>
+                                <th>Team</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.role|capitalize }}</td>
+                                <td>{% for account in accounts %}{% if account.id == user.account_id %}{{ account.name }}{% endif %}{% endfor %}</td>
+                                <td>{% for team in teams %}{% if team.id == user.team_id %}{{ team.name }}{% endif %}{% endfor %}</td>
+                                <td>{% if user.status == 'active' %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Disabled</span>{% endif %}</td>
+                                <td>
+                                    {% if current_user.role == 'super_admin' or (current_user.role == 'account_admin' and user.role != 'super_admin') or (current_user.role == 'team_admin' and user.role == 'user') %}
+                                    <form method="post" class="d-inline">
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                                        {% if user.status == 'active' %}
+                                        <input type="hidden" name="action" value="disable_user">
+                                        <button type="submit" class="btn btn-sm btn-warning">Disable</button>
+                                        {% else %}
+                                        <input type="hidden" name="action" value="enable_user">
+                                        <button type="submit" class="btn btn-sm btn-success">Enable</button>
+                                        {% endif %}
+                                    </form>
+                                    <form method="post" class="d-inline">
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                    </form>
+                                    {% else %}
+                                    <span class="text-muted">Protected</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Teams Tab -->
+                <div class="tab-pane fade" id="teams" role="tabpanel" aria-labelledby="teams-tab">
+                    <h5 class="mb-3">Team Management</h5>
+                    {% if current_user.role == 'super_admin' %}
+                    <form method="post" action="/user-management" class="mb-4">
+                        <input type="hidden" name="action" value="add_team">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-4">
+                                <label>Team Name</label>
+                                <input type="text" name="team_name" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label>Account</label>
+                                <select name="account_id" class="form-select" required>
+                                    <option value="">Select Account</option>
+                                    {% for account in accounts %}
+                                        <option value="{{ account.id }}">{{ account.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-primary">Add Team</button>
+                            </div>
+                        </div>
+                    </form>
+                    {% endif %}
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Team Name</th>
+                                <th>Account</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for team in teams %}
+                            <tr>
+                                <td>{{ team.name }}</td>
+                                <td>{% for account in accounts %}{% if account.id == team.account_id %}{{ account.name }}{% endif %}{% endfor %}</td>
+                                <td>{% if team.status == 'active' %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Disabled</span>{% endif %}</td>
+                                <td>
+                                    {% if current_user.role == 'super_admin' or current_user.role == 'account_admin' %}
+                                    <form method="post" class="d-inline">
+                                        <input type="hidden" name="team_id" value="{{ team.id }}">
+                                        {% if team.status == 'active' %}
+                                        <input type="hidden" name="action" value="disable_team">
+                                        <button type="submit" class="btn btn-sm btn-warning">Disable</button>
+                                        {% else %}
+                                        <input type="hidden" name="action" value="enable_team">
+                                        <button type="submit" class="btn btn-sm btn-success">Enable</button>
+                                        {% endif %}
+                                    </form>
+                                    <form method="post" class="d-inline">
+                                        <input type="hidden" name="action" value="delete_team">
+                                        <input type="hidden" name="team_id" value="{{ team.id }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                    </form>
+                                    {% else %}
+                                    <span class="text-muted">Protected</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Accounts Tab -->
+                <div class="tab-pane fade" id="accounts" role="tabpanel" aria-labelledby="accounts-tab">
+                    <h5 class="mb-3">Account Management</h5>
+                    {% if current_user.role == 'super_admin' %}
+                    <form method="post" action="/user-management" class="mb-4">
+                        <input type="hidden" name="action" value="add_account">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-6">
+                                <label>Account Name</label>
+                                <input type="text" name="account_name" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <button type="submit" class="btn btn-primary">Add Account</button>
+                            </div>
+                        </div>
+                    </form>
+                    {% endif %}
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Account Name</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for account in accounts %}
+                            <tr>
+                                <td>{{ account.name }}</td>
+                                <td>{% if account.status == 'active' %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Disabled</span>{% endif %}</td>
+                                <td>
+                                    {% if current_user.role == 'super_admin' %}
+                                    <form method="post" class="d-inline">
+                                        <input type="hidden" name="account_id" value="{{ account.id }}">
+                                        {% if account.status == 'active' %}
+                                        <input type="hidden" name="action" value="disable_account">
+                                        <button type="submit" class="btn btn-sm btn-warning">Disable</button>
+                                        {% else %}
+                                        <input type="hidden" name="action" value="enable_account">
+                                        <button type="submit" class="btn btn-sm btn-success">Enable</button>
+                                        {% endif %}
+                                    </form>
+                                    <form method="post" class="d-inline">
+                                        <input type="hidden" name="action" value="delete_account">
+                                        <input type="hidden" name="account_id" value="{{ account.id }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                    </form>
+                                    {% else %}
+                                    <span class="text-muted">Protected</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock %}

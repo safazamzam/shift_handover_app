@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="card shadow-sm p-4 mb-4">
+        <h2 class="mb-4">Escalation Matrix Upload</h2>
+        <form method="POST" enctype="multipart/form-data" class="mb-4">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-6">
+                    <input type="file" name="file" accept=".xlsx" class="form-control" required>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-success">Upload Escalation Matrix</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="card shadow-sm p-4 mb-4">
+        <h2 class="mb-4">Escalation Matrix Filter</h2>
+        {% if current_user.role == 'super_admin' %}
+            <form method="get" class="mb-4">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-3">
+                        <label for="account_id" class="form-label">Account</label>
+                        <select name="account_id" id="account_id" class="form-select" onchange="updateTeamsDropdown(this.value)">
+                            <option value="">-- Select Account --</option>
+                            {% for account in accounts %}
+                            <option value="{{ account.id }}" {% if selected_account_id == account.id %}selected{% endif %}>{{ account.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="team_id" class="form-label">Team</label>
+                        <select name="team_id" id="team_id" class="form-select">
+                            <option value="">-- Select Team --</option>
+                            {% for team in teams %}
+                            <option value="{{ team.id }}" {% if selected_team_id == team.id %}selected{% endif %}>{{ team.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="application" class="form-label">Select Application</label>
+                        <select name="application" id="application" class="form-select">
+                            <option value="">-- Select Application --</option>
+                            {% for app in app_names %}
+                            <option value="{{ app }}" {% if selected_app == app %}selected{% endif %}>{{ app }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
+                    </div>
+                </div>
+            </form>
+            <script>
+            function updateTeamsDropdown(accountId) {
+                fetch('/get_teams?account_id=' + accountId)
+                    .then(response => response.json())
+                    .then(data => {
+                        const teamSelect = document.getElementById('team_id');
+                        teamSelect.innerHTML = '<option value="">-- Select Team --</option>';
+                        data.teams.forEach(team => {
+                            teamSelect.innerHTML += `<option value="${team.id}">${team.name}</option>`;
+                        });
+                    });
+            }
+            </script>
+        {% elif current_user.role == 'account_admin' %}
+            <form method="get" class="mb-4">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-4">
+                        <label for="team_id" class="form-label">Team</label>
+                        <select name="team_id" id="team_id" class="form-select">
+                            <option value="">-- Select Team --</option>
+                            {% for team in teams %}
+                            <option value="{{ team.id }}" {% if selected_team_id == team.id %}selected{% endif %}>{{ team.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="application" class="form-label">Select Application</label>
+                        <select name="application" id="application" class="form-select">
+                            <option value="">-- Select Application --</option>
+                            {% for app in app_names %}
+                            <option value="{{ app }}" {% if selected_app == app %}selected{% endif %}>{{ app }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
+                    </div>
+                </div>
+            </form>
+        {% elif current_user.role == 'team_admin' %}
+            <form method="get" class="mb-4">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-6">
+                        <label for="application" class="form-label">Select Application</label>
+                        <select name="application" id="application" class="form-select">
+                            <option value="">-- Select Application --</option>
+                            {% for app in app_names %}
+                            <option value="{{ app }}" {% if selected_app == app %}selected{% endif %}>{{ app }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">Apply Filter</button>
+                    </div>
+                </div>
+            </form>
+        {% endif %}
+    {% if matrix_data %}
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        {% for col in matrix_data[0].keys() %}
+                        <th>{{ col }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in matrix_data %}
+                    <tr>
+                        {% for val in row.values() %}
+                        <td>{{ val }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% elif selected_app %}
+        <div class="alert alert-warning">No data found for the selected application.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

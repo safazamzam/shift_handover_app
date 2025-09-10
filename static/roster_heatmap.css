@@ -1,0 +1,26 @@
+/* Roster visualization enhancements */
+.roster-heatmap-table th, .roster-heatmap-table td {
+    text-align: center;
+    vertical-align: middle;
+    font-size: 1rem;
+    padding: 0.5rem 0.75rem;
+    min-width: 60px;
+}
+.roster-heatmap-table thead th {
+    background: #f1f3f6;
+    color: #333;
+    font-weight: 600;
+    border-bottom: 2px solid #dee2e6;
+}
+.roster-heatmap-table tbody tr:nth-child(even) {
+    background: #f9fafb;
+}
+.roster-heatmap-table tbody tr:hover {
+    background: #e9ecef;
+}
+.roster-shift-D { background: #d1e7dd !important; color: #155724; font-weight: 600; }
+.roster-shift-E { background: #ffe5b4 !important; color: #856404; font-weight: 600; }
+.roster-shift-N { background: #dbeafe !important; color: #1e3a8a; font-weight: 600; }
+.roster-shift-LE { background: #f8d7da !important; color: #842029; font-weight: 600; }
+.roster-shift-G { background: #e2e3e5 !important; color: #41464b; font-weight: 600; }
+.roster-shift-empty { background: #f8f9fa !important; color: #adb5bd; }

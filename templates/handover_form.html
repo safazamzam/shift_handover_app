@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="card shadow-sm p-4 mb-4">
+        <h2 class="mb-4">Shift Handover Form</h2>
+        <form method="POST">
+            <div class="row mb-3">
+                {% if current_user.role == 'super_admin' %}
+                <div class="col-md-6">
+                    <label for="account_id" class="form-label">Account</label>
+                    <select name="account_id" id="account_id" class="form-select" required>
+                        <option value="">-- Select Account --</option>
+                        {% for account in accounts %}
+                            <option value="{{ account.id }}" {% if account.id|string == request.args.get('account_id') %}selected{% endif %}>{{ account.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="team_id" class="form-label">Team</label>
+                        <select name="team_id" id="team_id" class="form-select" required>
+                            <option value="">-- Select Team --</option>
+                            {% for team in teams %}
+                            <option value="{{ team.id }}" data-account-id="{{ team.account_id }}">{{ team.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% elif current_user.role == 'account_admin' %}
+                    <div class="col-md-12">
+                        <label for="team_id" class="form-label">Team</label>
+                        <select name="team_id" id="team_id" class="form-select" required>
+                            <option value="">-- Select Team --</option>
+                            {% for team in teams %}
+                            <option value="{{ team.id }}" data-account-id="{{ team.account_id }}" {% if team.id|string == request.args.get('team_id') %}selected{% endif %}>{{ team.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label for="date" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="date" name="date" required value="{{ shift.date|default(today, true) }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="current_shift_type" class="form-label">Current Shift</label>
+                        <select class="form-select" id="current_shift_type" name="current_shift_type" required>
+                            <option value="">Select</option>
+                            <option value="Morning" {% if current_shift_type=='Morning' %}selected{% endif %}>Morning</option>
+                            <option value="Evening" {% if current_shift_type=='Evening' %}selected{% endif %}>Evening</option>
+                            <option value="Night" {% if current_shift_type=='Night' %}selected{% endif %}>Night</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="next_shift_type" class="form-label">Next Shift</label>
+                        <select class="form-select" id="next_shift_type" name="next_shift_type" required>
+                            <option value="">Select</option>
+                            <option value="Morning" {% if next_shift_type=='Morning' %}selected{% endif %}>Morning</option>
+                            <option value="Evening" {% if next_shift_type=='Evening' %}selected{% endif %}>Evening</option>
+                            <option value="Night" {% if next_shift_type=='Night' %}selected{% endif %}>Night</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row g-3 mt-3">
+                    <div class="col-md-6">
+                        <label for="current_engineers" class="form-label">Current Shift Engineers</label>
+                        <input type="text" class="form-control" id="current_engineers" name="current_engineers" value="{{ current_engineers|join(', ') }}" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="next_engineers" class="form-label">Next Shift Engineers</label>
+                        <input type="text" class="form-control" id="next_engineers" name="next_engineers" value="{{ next_engineers|join(', ') }}" readonly>
+                    </div>
+                </div>
+                <hr class="my-4">
+                <!-- Open Incidents Section -->
+                <div class="mb-3">
+                    <label class="form-label">Open Incidents</label>
+                    <div id="open_incidents">
+                        {% if open_incidents %}
+                            {% for incident in open_incidents %}
+                                <input type="text" name="open_incidents" class="form-control mb-2" placeholder="Open incident details" value="{{ incident }}">
+                            {% endfor %}
+                        {% else %}
+                            <input type="text" name="open_incidents" class="form-control mb-2" placeholder="Open incident details">
+                        {% endif %}
+                    </div>
+                </div>
+                <!-- Closed Incidents Section -->
+                <div class="mb-3">
+                    <label class="form-label">Closed Incidents</label>
+                    <div id="closed_incidents">
+                        {% if closed_incidents %}
+                            {% for incident in closed_incidents %}
+                                <input type="text" name="closed_incidents" class="form-control mb-2" placeholder="Closed incident details" value="{{ incident }}">
+                            {% endfor %}
+                        {% else %}
+                            <input type="text" name="closed_incidents" class="form-control mb-2" placeholder="Closed incident details">
+                        {% endif %}
+                    </div>
+                </div>
+                <!-- Priority Incidents Section -->
+                <div class="mb-3">
+                    <label>Priority Incidents</label>
+                    <div id="priority_incidents">
+                        {% if priority_incidents %}
+                            {% for incident in priority_incidents %}
+                                <input type="text" name="priority_incidents" class="form-control mb-2" placeholder="Priority incident details" value="{{ incident }}">
+                            {% endfor %}
+                        {% else %}
+                            <input type="text" name="priority_incidents" class="form-control mb-2" placeholder="Priority incident details">
+                        {% endif %}
+                    </div>
+                </div>
+                <!-- Handover Incidents Section -->
+                <div class="mb-3">
+                    <label>Handover Incidents</label>
+                    <div id="handover_incidents">
+                        {% if handover_incidents %}
+                            {% for incident in handover_incidents %}
+                                <input type="text" name="handover_incidents" class="form-control mb-2" placeholder="Handover incident details" value="{{ incident }}">
+                            {% endfor %}
+                        {% else %}
+                            <input type="text" name="handover_incidents" class="form-control mb-2" placeholder="Handover incident details">
+                        {% endif %}
+                    </div>
+                </div>
+                <!-- Key Points Section (moved to bottom, auto-increment) -->
+                <div class="mb-3">
+                    <label>Key Points</label>
+                    <div id="key_points">
+                        {% set kp_count = 1 %}
+                        {% for kp in open_key_points %}
+                        <div class="key-point-entry row mb-2">
+                            <div class="col-1">
+                                <input type="number" name="key_point_number" class="form-control" placeholder="No." min="1" value="{{ loop.index }}" readonly>
+                            </div>
+                            <div class="col-3">
+                                <input type="text" name="key_point_details" class="form-control" placeholder="Details" value="{{ kp.description }}">
+                            </div>
+                            <div class="col-3">
+                                <input type="text" name="jira_id" class="form-control" placeholder="JIRA ID" value="{{ kp.jira_id }}">
+                            </div>
+                            <div class="col-2">
+                                <select name="responsible_person" class="form-control">
+                                    <option value="">Responsible Person</option>
+                                    {% for member in team_members %}
+                                    <option value="{{ member.id }}" {% if kp.responsible_engineer_id == member.id %}selected{% endif %}>{{ member.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-3">
+                                <select name="key_point_status" class="form-control">
+                                    <option value="Open" {% if kp.status == 'Open' %}selected{% endif %}>Open</option>
+                                    <option value="In Progress" {% if kp.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                                    <option value="Closed" {% if kp.status == 'Closed' %}selected{% endif %}>Closed</option>
+                                </select>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        <!-- Blank row for new key point entry -->
+                        <div class="key-point-entry row mb-2">
+                            <div class="col-1">
+                                <input type="number" name="key_point_number" class="form-control" placeholder="No." min="1" value="{{ (open_key_points|length) + 1 }}" readonly>
+                            </div>
+                            <div class="col-3">
+                                <input type="text" name="key_point_details" class="form-control" placeholder="Details">
+                            </div>
+                            <div class="col-3">
+                                <input type="text" name="jira_id" class="form-control" placeholder="JIRA ID">
+                            </div>
+                            <div class="col-2">
+                                <select name="responsible_person" class="form-control">
+                                    <option value="">Responsible Person</option>
+                                    {% for member in team_members %}
+                                    <option value="{{ member.id }}">{{ member.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-3">
+                                <select name="key_point_status" class="form-control">
+                                    <option value="Open">Open</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Closed">Closed</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary btn-sm mt-2" onclick="addKeyPoint()">Add Key Point</button>
+                </div>
+                <script>
+                function addKeyPoint() {
+                    const container = document.getElementById('key_points');
+                    const count = container.getElementsByClassName('key-point-entry').length + 1;
+                    const entry = document.createElement('div');
+                    entry.className = 'key-point-entry row mb-2';
+                    entry.innerHTML = `
+                        <div class="col-1">
+                            <input type="number" name="key_point_number" class="form-control" placeholder="No." min="1" value="${count}" readonly>
+                        </div>
+                        <div class="col-3">
+                            <input type="text" name="key_point_details" class="form-control" placeholder="Details">
+                        </div>
+                        <div class="col-3">
+                            <input type="text" name="jira_id" class="form-control" placeholder="JIRA ID">
+                        </div>
+                        <div class="col-2">
+                            <select name="responsible_person" class="form-control">
+                                <option value="">Responsible Person</option>
+                                {% for member in team_members %}
+                                <option value="{{ member.id }}">{{ member.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-3">
+                            <select name="key_point_status" class="form-control">
+                                <option value="Open">Open</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Closed">Closed</option>
+                            </select>
+                        </div>
+                    `;
+                    container.appendChild(entry);
+                }
+                </script>
+                <button type="submit" class="btn btn-primary" name="action" value="save">Save as Draft</button>
+                <button type="submit" class="btn btn-success" name="action" value="send">Send & Submit</button>
+            </form>
+            <script>
+            // ...existing code...
+            function fetchEngineers(date, shiftType, targetFieldId) {
+                if (!date || !shiftType) {
+                    document.getElementById(targetFieldId).value = '';
+                    return;
+                }
+                fetch(`/api/get_engineers?date=${date}&shift_type=${shiftType}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.engineers) {
+                            document.getElementById(targetFieldId).value = data.engineers.join(', ');
+                        } else {
+                            document.getElementById(targetFieldId).value = '';
+                        }
+                    });
+            }
+            function updateEngineers() {
+                const date = document.getElementById('date').value;
+                const currentShift = document.getElementById('current_shift_type').value;
+                const nextShift = document.getElementById('next_shift_type').value;
+                fetchEngineers(date, currentShift, 'current_engineers');
+                fetchEngineers(date, nextShift, 'next_engineers');
+            }
+            document.getElementById('date').addEventListener('change', updateEngineers);
+            document.getElementById('current_shift_type').addEventListener('change', updateEngineers);
+            document.getElementById('next_shift_type').addEventListener('change', updateEngineers);
+
+            // Team dropdown filtering for Super Admin
+            // Team dropdown filtering for Super Admin with debug logging (single DOMContentLoaded)
+            var teamOptionsCache = null;
+            var teamPlaceholderCache = null;
+            window.addEventListener('DOMContentLoaded', function() {
+                var teamSelect = document.getElementById('team_id');
+                var accountSelect = document.getElementById('account_id');
+                teamOptionsCache = Array.from(teamSelect.querySelectorAll('option[data-account-id]')).map(function(opt) { return opt.cloneNode(true); });
+                teamPlaceholderCache = teamSelect.querySelector('option:not([data-account-id])').cloneNode(true);
+                console.log('Team dropdown cache initialized:', {
+                    teamOptionsCache: teamOptionsCache.map(opt => ({ value: opt.value, name: opt.textContent, accountId: opt.getAttribute('data-account-id') })),
+                    teamPlaceholderCache: teamPlaceholderCache ? teamPlaceholderCache.textContent : null
+                });
+
+                function filterTeams(selectedAccountId) {
+                    teamSelect.innerHTML = '';
+                    if (teamPlaceholderCache) {
+                        teamSelect.appendChild(teamPlaceholderCache.cloneNode(true));
+                    }
+                    if (selectedAccountId && teamOptionsCache) {
+                        var filteredTeams = teamOptionsCache.filter(function(option) {
+                            return String(option.getAttribute('data-account-id')) === String(selectedAccountId);
+                        });
+                        console.log('Filtering teams for account:', selectedAccountId, filteredTeams.map(opt => ({ value: opt.value, name: opt.textContent }))); 
+                        filteredTeams.forEach(function(option) {
+                            teamSelect.appendChild(option.cloneNode(true));
+                        });
+                        if (filteredTeams.length > 0) {
+                            teamSelect.value = filteredTeams[0].value;
+                        } else {
+                            teamSelect.value = '';
+                        }
+                    } else {
+                        teamSelect.value = '';
+                    }
+                }
+
+                // On page load, filter teams if account is preselected
+                setTimeout(function() {
+                    console.log('Page load filter teams for account:', accountSelect.value);
+                    filterTeams(accountSelect.value);
+                }, 50);
+
+                accountSelect.addEventListener('change', function() {
+                    filterTeams(this.value);
+                });
+            });
+            </script>
+    {% endblock %}
+
