@@ -40,6 +40,13 @@
                         {% if current_user.is_authenticated and current_user.role in ['super_admin', 'account_admin', 'team_admin'] %}
                         <li class="nav-item"><a class="nav-link" href="/user-management">User Management</a></li>
                         {% endif %}
+                             <li class="nav-item"><a class="nav-link" href="/change-management">Change Management</a></li>
+                             <li class="nav-item"><a class="nav-link" href="/problem-tickets">Problem Tickets</a></li>
+                             <li class="nav-item"><a class="nav-link" href="/kb-details">KB Details</a></li>
+                             <li class="nav-item"><a class="nav-link" href="/vendor-details">Vendor Details</a></li>
+                             <li class="nav-item"><a class="nav-link" href="/postmortem-details">Postmortem Details</a></li>
+                             <li class="nav-item"><a class="nav-link" href="/application-details">Application Details</a></li>
+
                     </ul>
                     {% if current_user.is_authenticated %}
                     <div class="px-3 pb-3">
