@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Application Details</h2>
+    <button class="btn btn-success mb-2" onclick="showAddModal()">Add Application</button>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle" id="appTable">
+            <thead class="table-primary">
+                <tr>
+                    <th>Application Name</th>
+                    <th>Purpose Of the Application</th>
+                    <th>Recording Link</th>
+                    <th>Documents Link</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for app in apps %}
+                <tr data-id="{{ app.id }}">
+                    <td class="editable" data-field="name">{{ app.name }}</td>
+                    <td class="editable" data-field="purpose">{{ app.purpose }}</td>
+                    <td class="editable" data-field="recording_link"><a href="{{ app.recording_link }}" target="_blank">{{ app.recording_link }}</a></td>
+                    <td class="editable" data-field="documents_link"><a href="{{ app.documents_link }}" target="_blank">{{ app.documents_link }}</a></td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="editRow(this)">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteRow(this)">Delete</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal for Add/Edit -->
+<div class="modal fade" id="appModal" tabindex="-1" aria-labelledby="appModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="appForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="appModalLabel">Add/Edit Application</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="appId">
+          <div class="mb-3">
+            <label for="appName" class="form-label">Application Name</label>
+            <input type="text" class="form-control" id="appName" required>
+          </div>
+          <div class="mb-3">
+            <label for="appPurpose" class="form-label">Purpose Of the Application</label>
+            <input type="text" class="form-control" id="appPurpose" required>
+          </div>
+          <div class="mb-3">
+            <label for="appRecordingLink" class="form-label">Recording Link</label>
+            <input type="url" class="form-control" id="appRecordingLink" required>
+          </div>
+          <div class="mb-3">
+            <label for="appDocumentsLink" class="form-label">Documents Link</label>
+            <input type="url" class="form-control" id="appDocumentsLink" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Save</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function showAddModal() {
+    document.getElementById('appForm').reset();
+    document.getElementById('appId').value = '';
+    new bootstrap.Modal(document.getElementById('appModal')).show();
+}
+
+function editRow(btn) {
+    var row = btn.closest('tr');
+    document.getElementById('appId').value = row.dataset.id;
+    document.getElementById('appName').value = row.querySelector('[data-field="name"]').innerText;
+    document.getElementById('appPurpose').value = row.querySelector('[data-field="purpose"]').innerText;
+    document.getElementById('appRecordingLink').value = row.querySelector('[data-field="recording_link"] a').getAttribute('href');
+    document.getElementById('appDocumentsLink').value = row.querySelector('[data-field="documents_link"] a').getAttribute('href');
+    new bootstrap.Modal(document.getElementById('appModal')).show();
+}
+
+document.getElementById('appForm').onsubmit = function(e) {
+    e.preventDefault();
+    var id = document.getElementById('appId').value;
+    var data = {
+        name: document.getElementById('appName').value,
+        purpose: document.getElementById('appPurpose').value,
+        recording_link: document.getElementById('appRecordingLink').value,
+        documents_link: document.getElementById('appDocumentsLink').value
+    };
+    var method = id ? 'PUT' : 'POST';
+    var url = id ? `/api/application-details/${id}` : '/api/application-details';
+    fetch(url, {
+        method: method,
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    }).then(res => res.json()).then(res => {
+        location.reload();
+    });
+};
+
+function deleteRow(btn) {
+    var row = btn.closest('tr');
+    var id = row.dataset.id;
+    if (confirm('Delete this application?')) {
+        fetch(`/api/application-details/${id}`, {method: 'DELETE'}).then(res => res.json()).then(res => {
+            location.reload();
+        });
+    }
+}
+</script>
+{% endblock %}
