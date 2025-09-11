@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">KB Details</h2>
+    <button class="btn btn-success mb-2" onclick="showAddModal()">Add KB Record</button>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle" id="kbTable">
+            <thead class="table-primary">
+                <tr>
+                    <th>Application Name</th>
+                    <th>Issue</th>
+                    <th>Description</th>
+                    <th>KB Number</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for kb in kbs %}
+                <tr data-id="{{ kb.id }}">
+                    <td class="editable" data-field="application_name">{{ kb.application_name }}</td>
+                    <td class="editable" data-field="issue">{{ kb.issue }}</td>
+                    <td class="editable" data-field="description">{{ kb.description }}</td>
+                    <td class="editable" data-field="kb_number">{{ kb.kb_number }}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="editRow(this)">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteRow(this)">Delete</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal for Add/Edit -->
+<div class="modal fade" id="kbModal" tabindex="-1" aria-labelledby="kbModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="kbForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="kbModalLabel">Add/Edit KB Record</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="kbId">
+          <div class="mb-3">
+            <label for="applicationName" class="form-label">Application Name</label>
+            <input type="text" class="form-control" id="applicationName" required>
+          </div>
+          <div class="mb-3">
+            <label for="issue" class="form-label">Issue</label>
+            <input type="text" class="form-control" id="issue" required>
+          </div>
+          <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <textarea class="form-control" id="description" required></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="kbNumber" class="form-label">KB Number</label>
+            <input type="text" class="form-control" id="kbNumber" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Save</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function showAddModal() {
+    document.getElementById('kbForm').reset();
+    document.getElementById('kbId').value = '';
+    new bootstrap.Modal(document.getElementById('kbModal')).show();
+}
+
+function editRow(btn) {
+    var row = btn.closest('tr');
+    document.getElementById('kbId').value = row.dataset.id;
+    document.getElementById('applicationName').value = row.querySelector('[data-field="application_name"]').innerText;
+    document.getElementById('issue').value = row.querySelector('[data-field="issue"]').innerText;
+    document.getElementById('description').value = row.querySelector('[data-field="description"]').innerText;
+    document.getElementById('kbNumber').value = row.querySelector('[data-field="kb_number"]').innerText;
+    new bootstrap.Modal(document.getElementById('kbModal')).show();
+}
+
+document.getElementById('kbForm').onsubmit = function(e) {
+    e.preventDefault();
+    var id = document.getElementById('kbId').value;
+    var data = {
+        application_name: document.getElementById('applicationName').value,
+        issue: document.getElementById('issue').value,
+        description: document.getElementById('description').value,
+        kb_number: document.getElementById('kbNumber').value
+    };
+    var method = id ? 'PUT' : 'POST';
+    var url = id ? `/api/kb-details/${id}` : '/api/kb-details';
+    fetch(url, {
+        method: method,
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    }).then(res => res.json()).then(res => {
+        location.reload();
+    });
+};
+
+function deleteRow(btn) {
+    var row = btn.closest('tr');
+    var id = row.dataset.id;
+    if (confirm('Delete this KB record?')) {
+        fetch(`/api/kb-details/${id}`, {method: 'DELETE'}).then(res => res.json()).then(res => {
+            location.reload();
+        });
+    }
+}
+</script>
+{% endblock %}
