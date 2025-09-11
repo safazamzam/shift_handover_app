@@ -3,6 +3,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from models.models import db, User, Account, Team
 from werkzeug.security import generate_password_hash
+from services.audit_service import log_action
 
 user_mgmt_bp = Blueprint('user_mgmt', __name__)
 
@@ -45,6 +46,7 @@ def user_management():
                     user.is_active = (action == 'enable_user')
                     user.status = 'active' if action == 'enable_user' else 'disabled'
                     db.session.commit()
+                    log_action('Enable/Disable User', f'User ID: {user_id}, Status: {user.status}')
                     flash(f"User {'enabled' if action == 'enable_user' else 'disabled'} successfully.")
                 else:
                     flash('You do not have permission to enable/disable this user.')
@@ -61,6 +63,7 @@ def user_management():
                     team.is_active = (action == 'enable_team')
                     team.status = 'active' if action == 'enable_team' else 'disabled'
                     db.session.commit()
+                    log_action('Enable/Disable Team', f'Team ID: {team_id}, Status: {team.status}')
                     flash(f"Team {'enabled' if action == 'enable_team' else 'disabled'} successfully.")
                 else:
                     flash('You do not have permission to enable/disable this team.')
@@ -76,6 +79,7 @@ def user_management():
                     account.is_active = (action == 'enable_account')
                     account.status = 'active' if action == 'enable_account' else 'disabled'
                     db.session.commit()
+                    log_action('Enable/Disable Account', f'Account ID: {account_id}, Status: {account.status}')
                     flash(f"Account {'enabled' if action == 'enable_account' else 'disabled'} successfully.")
                 else:
                     flash('You do not have permission to enable/disable this account.')
@@ -113,6 +117,7 @@ def user_management():
                             db.session.flush()
                             debug_msgs.append(f"[DEBUG] User (before commit): id={user.id}, username={user.username}")
                             db.session.commit()
+                            log_action('Add User', f'User: {username}, Role: {role}, Account: {account_id}, Team: {team_id}')
                             debug_msgs.append(f"[DEBUG] User created: {user}")
                             flash('User added successfully.')
                         else:
@@ -139,6 +144,7 @@ def user_management():
                     user.status = 'deleted'
                     user.is_active = False
                     db.session.commit()
+                    log_action('Delete User', f'User ID: {user_id}, Username: {getattr(user, "username", None)}')
                     print(f"[DELETE] User soft deleted: {user}")
                     flash('User deleted successfully.')
                 else:
@@ -156,6 +162,7 @@ def user_management():
                     team.status = 'deleted'
                     team.is_active = False
                     db.session.commit()
+                    log_action('Delete Team', f'Team ID: {team_id}, Name: {getattr(team, "name", None)}')
                     flash('Team deleted successfully.')
                 else:
                     flash('You do not have permission to delete this team.')
@@ -170,6 +177,7 @@ def user_management():
                     account.status = 'deleted'
                     account.is_active = False
                     db.session.commit()
+                    log_action('Delete Account', f'Account ID: {account_id}, Name: {getattr(account, "name", None)}')
                     flash('Account deleted successfully.')
                 else:
                     flash('You do not have permission to delete this account.')
