@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Vendor Details</h2>
+    <button class="btn btn-success mb-2" onclick="showAddModal()">Add Vendor</button>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle" id="vendorTable">
+            <thead class="table-primary">
+                <tr>
+                    <th>Application Name</th>
+                    <th>Vendor Name</th>
+                    <th>Contact Name</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in vendors %}
+                <tr data-id="{{ v.id }}">
+                    <td class="editable" data-field="application_name">{{ v.application_name }}</td>
+                    <td class="editable" data-field="vendor_name">{{ v.vendor_name }}</td>
+                    <td class="editable" data-field="contact_name">{{ v.contact_name }}</td>
+                    <td class="editable" data-field="phone"><span>{{ v.phone }}</span></td>
+                    <td class="editable" data-field="email"><a href="mailto:{{ v.email }}">{{ v.email }}</a></td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="editRow(this)">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteRow(this)">Delete</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal for Add/Edit -->
+<div class="modal fade" id="vendorModal" tabindex="-1" aria-labelledby="vendorModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="vendorForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="vendorModalLabel">Add/Edit Vendor</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="vendorId">
+          <div class="mb-3">
+            <label for="applicationName" class="form-label">Application Name</label>
+            <input type="text" class="form-control" id="applicationName" required>
+          </div>
+          <div class="mb-3">
+            <label for="vendorName" class="form-label">Vendor Name</label>
+            <input type="text" class="form-control" id="vendorName" required>
+          </div>
+          <div class="mb-3">
+            <label for="contactName" class="form-label">Contact Name</label>
+            <input type="text" class="form-control" id="contactName" required>
+          </div>
+          <div class="mb-3">
+            <label for="phone" class="form-label">Phone</label>
+            <input type="text" class="form-control" id="phone" required pattern="^[0-9+\-() ]+$">
+          </div>
+          <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control" id="email" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Save</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function showAddModal() {
+    document.getElementById('vendorForm').reset();
+    document.getElementById('vendorId').value = '';
+    new bootstrap.Modal(document.getElementById('vendorModal')).show();
+}
+
+function editRow(btn) {
+    var row = btn.closest('tr');
+    document.getElementById('vendorId').value = row.dataset.id;
+    document.getElementById('applicationName').value = row.querySelector('[data-field="application_name"]').innerText;
+    document.getElementById('vendorName').value = row.querySelector('[data-field="vendor_name"]').innerText;
+    document.getElementById('contactName').value = row.querySelector('[data-field="contact_name"]').innerText;
+    document.getElementById('phone').value = row.querySelector('[data-field="phone"] span').innerText;
+    document.getElementById('email').value = row.querySelector('[data-field="email"] a').innerText;
+    new bootstrap.Modal(document.getElementById('vendorModal')).show();
+}
+
+document.getElementById('vendorForm').onsubmit = function(e) {
+    e.preventDefault();
+    var id = document.getElementById('vendorId').value;
+    var data = {
+        application_name: document.getElementById('applicationName').value,
+        vendor_name: document.getElementById('vendorName').value,
+        contact_name: document.getElementById('contactName').value,
+        phone: document.getElementById('phone').value,
+        email: document.getElementById('email').value
+    };
+    var method = id ? 'PUT' : 'POST';
+    var url = id ? `/api/vendor-details/${id}` : '/api/vendor-details';
+    fetch(url, {
+        method: method,
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    }).then(res => res.json()).then(res => {
+        location.reload();
+    });
+};
+
+function deleteRow(btn) {
+    var row = btn.closest('tr');
+    var id = row.dataset.id;
+    if (confirm('Delete this vendor?')) {
+        fetch(`/api/vendor-details/${id}`, {method: 'DELETE'}).then(res => res.json()).then(res => {
+            location.reload();
+        });
+    }
+}
+</script>
+{% endblock %}
