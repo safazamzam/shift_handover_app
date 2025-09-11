@@ -4,6 +4,8 @@ from flask_login import login_required, current_user
 from flask import session
 from models.models import TeamMember, Shift, Incident, ShiftKeyPoint, ShiftRoster, current_shift_engineers, next_shift_engineers
 from app import db
+from models.audit_log import AuditLog
+from services.audit_service import log_action
 from services.email_service import send_handover_email
 from datetime import datetime, timedelta, time as dt_time
 import pytz
@@ -86,6 +88,13 @@ def edit_handover(shift_id):
     handover_incidents = [i.title for i in Incident.query.filter_by(shift_id=shift.id, type='Handover').all()]
 
     if request.method == 'POST':
+        # Audit log: editing handover
+        db.session.add(AuditLog(
+            user_id=current_user.id,
+            username=current_user.username,
+            action='Edit Handover',
+            details=f'Shift ID: {shift_id}, Action: {request.form.get("action", "send")}'
+        ))
         shift.date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
         shift.current_shift_type = request.form['current_shift_type']
         shift.next_shift_type = request.form['next_shift_type']
@@ -119,7 +128,17 @@ def edit_handover(shift_id):
             shift.next_engineers.append(member)
         # Remove and re-add incidents/keypoints
         Incident.query.filter_by(shift_id=shift.id).delete()
+        log_action('Delete Incidents', f'Shift ID: {shift.id}')
         ShiftKeyPoint.query.filter_by(shift_id=shift.id).delete()
+        log_action('Delete KeyPoints', f'Shift ID: {shift.id}')
+        db.session.commit()
+        # Audit log: after commit, log send/save
+        db.session.add(AuditLog(
+            user_id=current_user.id,
+            username=current_user.username,
+            action='Handover ' + ('Sent' if action == 'send' else 'Saved as Draft'),
+            details=f'Shift ID: {shift_id}, Status: {shift.status}'
+        ))
         db.session.commit()
         def add_incident(field, inc_type):
             vals = request.form.getlist(field)
@@ -136,6 +155,7 @@ def edit_handover(shift_id):
                         team_id=shift.team_id
                     )
                     db.session.add(incident)
+                    log_action('Add Incident', f'Title: {val}, Type: {inc_type}, Shift ID: {shift.id}')
         add_incident('open_incidents', 'Active')
         add_incident('closed_incidents', 'Closed')
         add_incident('priority_incidents', 'Priority')
@@ -161,6 +181,7 @@ def edit_handover(shift_id):
                     for pkp in prev_kps:
                         pkp.status = 'Closed'
                         db.session.add(pkp)
+                        log_action('Close KeyPoint', f'Description: {details}, Shift ID: {shift.id}')
                     # Do not add a new key point for closed status
                     continue
                 # Try to find all existing open/in-progress key points with the same description and jira_id
@@ -177,6 +198,7 @@ def edit_handover(shift_id):
                         existing_kp.account_id = shift.account_id
                         existing_kp.team_id = shift.team_id
                         db.session.add(existing_kp)
+                        log_action('Update KeyPoint', f'Description: {details}, Status: {status}, Shift ID: {shift.id}')
                 else:
                     kp = ShiftKeyPoint(
                         description=details,
@@ -188,6 +210,7 @@ def edit_handover(shift_id):
                         team_id=shift.team_id
                     )
                     db.session.add(kp)
+                    log_action('Add KeyPoint', f'Description: {details}, Status: {status}, Shift ID: {shift.id}')
         db.session.commit()
         if action == 'send':
             import logging
@@ -266,6 +289,13 @@ def handover():
     shift_map = {'Morning': 'D', 'Evening': 'E', 'Night': 'N'}
     # POST: Save as draft or send
     if request.method == 'POST':
+        # Audit log: creating new handover
+        db.session.add(AuditLog(
+            user_id=current_user.id,
+            username=current_user.username,
+            action='Create Handover',
+            details=f'Date: {date}, Shift: {current_shift_type}, Team: {team_id}'
+        ))
         # Get form data
         date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
         current_shift_type = request.form['current_shift_type']
@@ -281,6 +311,14 @@ def handover():
             team_id=team_id
         )
         db.session.add(shift)
+        db.session.commit()
+        # Audit log: after commit, log send/save
+        db.session.add(AuditLog(
+            user_id=current_user.id,
+            username=current_user.username,
+            action='Handover ' + ('Sent' if action == 'send' else 'Saved as Draft'),
+            details=f'Shift ID: {shift.id}, Status: {shift.status}'
+        ))
         db.session.commit()
         # Populate engineers
         current_shift_code = shift_map[current_shift_type]
