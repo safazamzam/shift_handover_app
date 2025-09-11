@@ -13,11 +13,31 @@
     <style>
         .sidebar {
             min-height: 100vh;
-            background: #f8f9fa;
+            background: linear-gradient(135deg, #e9ecef 0%, #f8f9fa 100%);
             border-right: 1px solid #dee2e6;
         }
         .sidebar .nav-link {
             color: #333;
+            font-weight: 500;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            transition: background 0.2s, color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: #0d6efd;
+            color: #fff;
+        }
+        .sidebar .menu-section {
+            font-size: 0.95em;
+            font-weight: 700;
+            color: #0d6efd;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+            padding-left: 1.25rem;
+            letter-spacing: 0.5px;
         }
 </style>
     </head>
@@ -29,25 +49,30 @@
             <nav class="col-md-2 d-none d-md-block sidebar p-0">
                 <div class="position-sticky">
                     <ul class="nav flex-column py-3">
-                        <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/handover">Handover Form</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/roster">Shift Roster</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/roster-upload">Shift Roster Upload</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/team">Team Details</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/handover-reports">Shift Handover Reports</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/escalation-matrix">Escalation Matrix</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/keypoints">Key Points Updates</a></li>
+                        <div class="menu-section">Main</div>
+                        <li class="nav-item"><a class="nav-link" href="/"><span class="bi bi-house-door"></span> Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/handover"><span class="bi bi-pencil-square"></span> Handover Form</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/handover-reports"><span class="bi bi-journal-text"></span> Shift Handover Reports</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/audit-logs"><span class="bi bi-clipboard-data"></span> Audit Logs</a></li>
+                        <div class="menu-section">Operations</div>
+                        <li class="nav-item"><a class="nav-link" href="/roster"><span class="bi bi-people"></span> Shift Roster</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/roster-upload"><span class="bi bi-upload"></span> Shift Roster Upload</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/team"><span class="bi bi-person-badge"></span> Team Details</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/escalation-matrix"><span class="bi bi-exclamation-triangle"></span> Escalation Matrix</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/keypoints"><span class="bi bi-lightbulb"></span> Key Points Updates</a></li>
                         {% if current_user.is_authenticated and current_user.role in ['super_admin', 'account_admin', 'team_admin'] %}
-                        <li class="nav-item"><a class="nav-link" href="/user-management">User Management</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/user-management"><span class="bi bi-person-lines-fill"></span> User Management</a></li>
                         {% endif %}
-                             <li class="nav-item"><a class="nav-link" href="/change-management">Change Management</a></li>
-                             <li class="nav-item"><a class="nav-link" href="/problem-tickets">Problem Tickets</a></li>
-                             <li class="nav-item"><a class="nav-link" href="/kb-details">KB Details</a></li>
-                             <li class="nav-item"><a class="nav-link" href="/vendor-details">Vendor Details</a></li>
-                             <li class="nav-item"><a class="nav-link" href="/postmortem-details">Postmortem Details</a></li>
-                             <li class="nav-item"><a class="nav-link" href="/application-details">Application Details</a></li>
-
+                        <div class="menu-section">Other</div>
+                        <li class="nav-item"><a class="nav-link" href="/change-management"><span class="bi bi-arrow-repeat"></span> Change Management</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/problem-tickets"><span class="bi bi-bug"></span> Problem Tickets</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/kb-details"><span class="bi bi-book"></span> KB Details</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/vendor-details"><span class="bi bi-building"></span> Vendor Details</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/postmortem-details"><span class="bi bi-emoji-dizzy"></span> Postmortem Details</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/application-details"><span class="bi bi-app"></span> Application Details</a></li>
                     </ul>
+                    <!-- Bootstrap Icons CDN -->
+                    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
                     {% if current_user.is_authenticated %}
                     <div class="px-3 pb-3">
                         <div class="card mb-2">
@@ -109,4 +134,3 @@
 </html>
 </body>
 </html>
-
