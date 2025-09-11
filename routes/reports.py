@@ -5,6 +5,8 @@ from datetime import datetime
 from models.models import Shift, Incident, ShiftKeyPoint, TeamMember, Account, Team
 from services.export_service import export_incidents_csv, export_keypoints_pdf
 
+from services.audit_service import log_action
+
 
 reports_bp = Blueprint('reports', __name__)
 
@@ -13,6 +15,7 @@ reports_bp = Blueprint('reports', __name__)
 @reports_bp.route('/handover-reports/export/bulk', methods=['GET'])
 @login_required
 def export_handover_bulk():
+    log_action('Export Reports', f'Format: {request.args.get("format")}, Filters: account_id={request.args.get("account_id")}, team_id={request.args.get("team_id")}, date={request.args.get("date")}, shift_type={request.args.get("shift_type")}')
     date_filter = request.args.get('date')
     shift_type_filter = request.args.get('shift_type')
     account_id = request.args.get('account_id')
@@ -83,6 +86,7 @@ def export_handover_bulk():
 @reports_bp.route('/handover-reports/export/csv/<int:shift_id>', methods=['GET'])
 @login_required
 def export_handover_csv(shift_id):
+    log_action('Export Single Shift CSV', f'Shift ID: {shift_id}')
     shift = Shift.query.get_or_404(shift_id)
     return export_incidents_csv(shift.date, shift_id)
 
@@ -90,6 +94,7 @@ def export_handover_csv(shift_id):
 @reports_bp.route('/handover-reports/export/pdf/<int:shift_id>', methods=['GET'])
 @login_required
 def export_handover_pdf(shift_id):
+    log_action('Export Single Shift PDF', f'Shift ID: {shift_id}')
     shift = Shift.query.get_or_404(shift_id)
     return export_keypoints_pdf(shift.date, shift_id)
 
@@ -97,6 +102,7 @@ def export_handover_pdf(shift_id):
 @reports_bp.route('/handover-reports', methods=['GET'])
 @login_required
 def handover_reports():
+    log_action('View Reports Tab', f'Filters: account_id={request.args.get("account_id")}, team_id={request.args.get("team_id")}, date={request.args.get("date")}, shift_type={request.args.get("shift_type")}')
     date_filter = request.args.get('date')
     shift_type_filter = request.args.get('shift_type')
     account_id = None
